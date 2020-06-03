@@ -1,61 +1,51 @@
-//import React, { useState } from 'react';
 import React, { Component } from 'react';
-import styled from 'styled-components';
-import './App.css';
+
+import classes from './App.css';
 import Persons from '../components/Persons/Persons';
 import Cockpit from '../components/Cockpit/Cockpit';
-
-const StyledButton = styled.button`
-  background-color: ${props => props.alt ? 'red' : 'green'};
-  color: white;
-  font: inherit;
-  border: 1px solid blue;
-  padding: 8px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: ${props => props.alt ? 'salmon' : 'lightgreen'};
-    color: black;
-  }
-`;
+import withClass from '../hoc/withClass';
+import Auxiliary from '../hoc/Auxiliary';
+import AuthContext  from '../context/auth-context';
 
 class App extends Component {
-
   constructor(props) {
     super(props);
-    console.log('[App.js] consructor');
+    console.log('[App.js] constructor');
   }
 
   state = {
     persons: [
-      { id: 'asfa1', name: 'Max', age: 28 },
-      { id: 'vasdf1', name: 'Manu', age: 29 },
-      { id: 'asdf11', name: 'Stephanie', age: 26 }
+      { id: 'asfa1', name: 'Nancy', age: 24 },
+      { id: 'vasdf1', name: 'Manu', age: 18 },
+      { id: 'asdf11', name: 'Dhara', age: 20 }
     ],
     otherState: 'some other value',
     showPersons: false,
-    showCockpit: true
+    showCockpit: true,
+    changeCounter: 0,
+    authenticated: false
+  };
+
+  static getDerivedStateFromProps(props, state) {
+    console.log('[App.js] getDerivedStateFromProps', props);
+    return state;
   }
 
-  static getDerivedStateFromProps (props,state){
-      console.log('[App.js] getDerivedStateFromProps', props);
-      return state;
-  }
-
-  // componentWillMount (){
+  // componentWillMount() {
   //   console.log('[App.js] componentWillMount');
   // }
 
-  componentDidMount(){
+  componentDidMount() {
     console.log('[App.js] componentDidMount');
   }
 
-  shouldComponentUpdate(nextProp,nextState){
+  shouldComponentUpdate(nextProps, nextState) {
     console.log('[App.js] shouldComponentUpdate');
     return true;
   }
-  componentDidUpdate(){
-    console.log('[App.js] conponentDidUpdate');
+
+  componentDidUpdate() {
+    console.log('[App.js] componentDidUpdate');
   }
 
   nameChangedHandler = (event, id) => {
@@ -74,7 +64,12 @@ class App extends Component {
     const persons = [...this.state.persons];
     persons[personIndex] = person;
 
-    this.setState({ persons: persons });
+    this.setState( (prevState, props) =>{
+      return { 
+        persons: persons,
+        changeCounter: prevState.changeCounter + 1 
+      }
+    });
   };
 
   deletePersonHandler = personIndex => {
@@ -88,99 +83,55 @@ class App extends Component {
     const doesShow = this.state.showPersons;
     this.setState({ showPersons: !doesShow });
   };
+  
+  loginHandler = () =>{
+    this.setState({authenticated: true});
+  };
 
   render() {
-    
     console.log('[App.js] render');
-    const style = {
-      backgroundColor: 'green',
-      color: 'white',
-      font: 'inherit',
-      border: '1px solid blue',
-      padding: '8px',
-      cursor: 'pointer',
-      ':hover': {
-        backgroundColor: 'lightgreen',
-        color: 'black'
-      }
-    };
-
-    
     let persons = null;
 
-
     if (this.state.showPersons) {
-      persons = <Persons 
-            persons={this.state.persons}
-            clicked={this.deletePersonHandler}
-            changed={this.nameChangedHandler} />;
-      // style.backgroundColor = 'red';
-      // style[':hover'] = {
-      //   backgroundColor: 'salmon',
-      //   color: 'black'
-      // };
+      persons = (
+        <Persons
+          persons={this.state.persons}
+          clicked={this.deletePersonHandler}
+          changed={this.nameChangedHandler}
+          isAuthenticated = {this.state.authenticated}
+        />
+      );
     }
 
     return (
-      <div className="App">
-        <button 
+      <Auxiliary>
+        <button
           onClick={() => {
-            this.setState({showCockpit:false})}}>Remove Cockpit
+            this.setState({ showCockpit: false });
+          }}
+        >
+          Remove Cockpit
         </button>
-        {this.state.showCockpit ? (
-          <Cockpit 
-            title={this.props.appTitle}
-            showPersons={this.state.showPersons} 
-            persons={this.state.persons}
-            clicked={this.togglePersonsHandler}
-          /> 
-        ) :null }
-        {persons}
-      </div>
+        <AuthContext.Provider 
+          value ={{
+            authenticated: this.state.authenticated,
+            login: this.loginHandler
+          }}
+        >
+          {this.state.showCockpit ? (
+            <Cockpit
+              title={this.props.appTitle}
+              showPersons={this.state.showPersons}
+              personsLength={this.state.persons.length}
+              clicked={this.togglePersonsHandler}
+            />
+          ) : null}
+          {persons}
+        </AuthContext.Provider>
+      </Auxiliary>
     );
     // return React.createElement('div', {className: 'App'}, React.createElement('h1', null, 'Does this work now?'));
   }
 }
 
-export default App;
-
-// const App = props => {
-//   const [ personsState,setPersonsState ] = useState({
-//     persons:[
-//       {name: 'nancy', age: 24 },
-//       {name: 'dhara', age: 20 },
-//       {name: 'nita', age: 45 }
-//     ]
-//   });
-
-//   const [otherState, setOtherState] = useState('some other value');
-
-//   console.log(personsState, otherState);
-
-//   const switchNameHandler = () =>{
-//         //console.log('Was clicked');
-//         //this.state.persons[0].name = 'Nancy';
-    
-//         setPersonsState({
-//           persons:[
-//             {name: 'nancy Rajput', age: 24 },
-//             {name: 'dhara', age: 20 },
-//             {name: 'nita', age: 44 }
-//           ]
-//         })
-//       }
-
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <h1>Hi, I am React App</h1>
-//         <p>This is really Working!!</p>
-//         <button onClick={switchNameHandler}> Swtich Name </button>
-//         <Person name={personsState.persons[0].name} age={personsState.persons[0].age} />
-//         <Person name={personsState.persons[1].name} age={personsState.persons[1].age} > My hobbies: writting</Person>
-//         <Person name={personsState.persons[2].name} age={personsState.persons[2].age} />
-//       </header>
-//     </div>
-//   );
-//   //return React.createElement('div',{className:'App'},React.createElement('h1',null,'Does this work Now?'));
-// }
+export default withClass(App, classes.App);
